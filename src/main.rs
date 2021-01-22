@@ -78,7 +78,7 @@ fn main() {
 fn draw(screen: &mut Screen, camera: &Player, field: &Field) {
     for x in 0..WIDTH {
         let angle = calculate_angle(x, camera.angle);
-        let dist = calculate_wall_distance(&field, &camera, angle);
+        let dist = calculate_wall_distance(field, camera, angle);
         let ceil = calculate_ceiling_offset(dist);
 
         for y in 0..HEIGHT {
@@ -101,11 +101,10 @@ fn calculate_angle(x: usize, camera_angle: f64) -> f64 {
 }
 
 fn calculate_wall_distance(field: &Field, player: &Player, angle: f64) -> f64 {
-    let mut hit = false;
     let mut dist = 0.0;
     let (eye_x, eye_y) = angle.sin_cos();
 
-    while !hit && dist < DEPTH_OF_VIEW {
+    while dist < DEPTH_OF_VIEW {
         dist += 0.1;
         let test_x = player.x + eye_x * dist;
         let test_y = player.y + eye_y * dist;
@@ -113,17 +112,12 @@ fn calculate_wall_distance(field: &Field, player: &Player, angle: f64) -> f64 {
             return DEPTH_OF_VIEW;
         }
         match field.get(test_x as usize, test_y as usize) {
-            None => {
-                dist = DEPTH_OF_VIEW;
-                hit = true;
-            }
-            Some('#') => {
-                hit = true;
-            }
+            None => return DEPTH_OF_VIEW,
+            Some('#') => return dist,
             Some(_) => {}
         }
     }
-    dist
+    DEPTH_OF_VIEW
 }
 
 fn calculate_ceiling_offset(dist: f64) -> usize {

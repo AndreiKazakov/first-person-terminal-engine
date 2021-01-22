@@ -13,13 +13,13 @@ impl Screen {
         write!(std, "{}", cursor::Hide).unwrap();
         Self { stdout: std }
     }
-    
+
     pub fn move_to(&mut self, x: usize, y: usize) {
-        write!(self.stdout, "{}", cursor::Goto(x as u16, y as u16));
+        write!(self.stdout, "{}", cursor::Goto(x as u16, y as u16)).unwrap();
     }
 
     pub fn draw_square(&mut self, r: u8, g: u8, b: u8) {
-        write!(self.stdout, "{} ", color::Rgb(r, g, b).bg_string());
+        write!(self.stdout, "{} ", color::Rgb(r, g, b).bg_string()).unwrap();
     }
 
     pub fn clear_screen(&mut self) {
