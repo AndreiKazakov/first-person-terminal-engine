@@ -6,7 +6,7 @@ use termion::async_stdin;
 use field::Field;
 use player::Player;
 
-use crate::screen::Screen;
+use crate::screen::{Screen, RGB};
 
 mod field;
 mod player;
@@ -47,6 +47,7 @@ fn main() {
     let mut screen = Screen::new();
     let mut stdin = async_stdin().bytes();
     draw(&mut screen, &player, &field);
+    screen.flush();
 
     loop {
         match stdin.next() {
@@ -76,22 +77,42 @@ fn main() {
 }
 
 fn draw(screen: &mut Screen, camera: &Player, field: &Field) {
+    draw_map(screen, camera, field);
     for x in 0..WIDTH {
         let angle = calculate_angle(x, camera.angle);
         let dist = calculate_wall_distance(field, camera, angle);
         let ceil = calculate_ceiling_offset(dist);
 
         for y in 0..HEIGHT {
+            if y < field.field.len() && x < field.field[0].len() {
+                continue;
+            }
             screen.move_to(x + 1, y + 1);
 
             if y < ceil {
-                screen.draw_square(0, 0, 128);
+                screen.print_char(' ', RGB(0, 0, 128));
             } else if y < HEIGHT - ceil {
-                screen.draw_square((161.0 - 10.0 * dist) as u8, 0, 0);
+                screen.print_char(' ', RGB((161.0 - 10.0 * dist) as u8, 0, 0));
             } else {
                 let floor_dist = y as f64 - HEIGHT as f64 / 2.0;
-                screen.draw_square(0, (13.0 * floor_dist) as u8, 0);
+                screen.print_char(' ', RGB(0, (13.0 * floor_dist) as u8, 0));
             }
+        }
+    }
+}
+
+fn draw_map(screen: &mut Screen, camera: &Player, field: &Field) {
+    for (y, line) in field.field.iter().enumerate() {
+        screen.move_to(1, y + 1);
+        for (x, &c) in line.iter().enumerate() {
+            screen.print_char(
+                if camera.x as usize == x && camera.y as usize == y {
+                    '@'
+                } else {
+                    c
+                },
+                RGB(0, 0, 0),
+            );
         }
     }
 }

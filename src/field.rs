@@ -1,5 +1,5 @@
 pub struct Field {
-    field: Vec<Vec<char>>,
+    pub field: Vec<Vec<char>>,
 }
 impl Field {
     pub fn new(field: Vec<&str>) -> Self {
