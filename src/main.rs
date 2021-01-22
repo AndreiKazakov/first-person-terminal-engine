@@ -17,6 +17,10 @@ const HEIGHT: usize = 38;
 const FOV: f64 = PI / 4.0;
 const DEPTH_OF_VIEW: f64 = 16.0;
 
+struct Config {
+    show_map: bool,
+}
+
 fn main() {
     let field = Field::new(vec![
         "#####################",
@@ -39,6 +43,7 @@ fn main() {
         "#####################",
     ]);
 
+    let mut config = Config { show_map: true };
     let mut player = Player {
         x: 11.0,
         y: 5.0,
@@ -46,7 +51,7 @@ fn main() {
     };
     let mut screen = Screen::new();
     let mut stdin = async_stdin().bytes();
-    draw(&mut screen, &player, &field);
+    draw(&mut screen, &player, &field, &config);
     screen.flush();
 
     loop {
@@ -65,26 +70,30 @@ fn main() {
                     player.move_forward();
                 }
             }
+            Some(Ok(b'm')) => config.show_map = !config.show_map,
             Some(Ok(b'q')) => break,
             _ => continue,
         }
 
-        draw(&mut screen, &player, &field);
+        draw(&mut screen, &player, &field, &config);
     }
 
     screen.move_to(WIDTH, HEIGHT);
     screen.reset();
 }
 
-fn draw(screen: &mut Screen, camera: &Player, field: &Field) {
-    draw_map(screen, camera, field);
+fn draw(screen: &mut Screen, camera: &Player, field: &Field, config: &Config) {
+    if config.show_map {
+        draw_map(screen, camera, field);
+    }
+
     for x in 0..WIDTH {
         let angle = calculate_angle(x, camera.angle);
         let dist = calculate_wall_distance(field, camera, angle);
         let ceil = calculate_ceiling_offset(dist);
 
         for y in 0..HEIGHT {
-            if y < field.field.len() && x < field.field[0].len() {
+            if config.show_map && y < field.field.len() && x < field.field[0].len() {
                 continue;
             }
             screen.move_to(x + 1, y + 1);
